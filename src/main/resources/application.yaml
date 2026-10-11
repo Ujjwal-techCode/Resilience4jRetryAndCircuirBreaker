@@ -1,0 +1,60 @@
+spring:
+  application:
+    name: Resilience4jRetryAndCircuirBreaker
+server:
+  port: 9898
+
+
+management:
+  health:
+    circuitbreaker:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+
+##resilience4j.circuitbreaker. ... (singular)  but the urls for seeing circuitbreaker report will be http://localhost:9898/actuator/circuitbreakers  (plural)
+resilience4j:
+
+  circuitbreaker:
+    instances:
+      catalogNotFound:
+        register-health-indicator: true
+        event-consumer-buffer-size: 10
+        failure-rate-threshold: 50
+        minimum-number-of-calls: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+        wait-duration-in-open-state: 5s
+        permitted-number-of-calls-in-half-open-state: 3
+        sliding-window-size: 10
+        sliding-window-type: count-based
+
+  retry:
+    instances:
+      simpleRetry:
+        maxAttempts: 3
+        waitDuration: 5s
+      retryOnException:
+        maxAttempts: 4
+        waitDuration: 3s
+        retryExceptions:
+          - java.lang.ArrayIndexOutOfBoundsException
+        ignoreExceptions:
+          - java.lang.NullPointerException
+      retryBasedOnConditionalPredicate:
+        maxAttempts: 2
+        waitDuration: 2s
+        resultPredicate: com.retry.examples.exception.RetryPredicate
+      retryBasedOnExceptionPredicate:
+        maxAttempts: 2
+        waitDuration: 2s
+        retryExceptionPredicate: com.retry.examples.exception.RetryPredicate
+      retryUsingExponentialBackoff:
+        maxAttempts: 3
+        waitDuration: 2s
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
